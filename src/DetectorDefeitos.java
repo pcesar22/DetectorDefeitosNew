@@ -59,6 +59,11 @@ public class DetectorDefeitos extends JFrame {
     private static int procCounter = 0;
 
 
+    /**
+     * Constructor for the DetectorDefeitos class.
+     * The file functions as well as all the GUI buttons and interfaces
+     * will be created.
+     */
     DetectorDefeitos() {
 
         FILENAME = "Parametros/parametros";
@@ -379,6 +384,9 @@ public class DetectorDefeitos extends JFrame {
     }
 
 
+    /**
+     * @return Contains the thresholded image in Mat format
+     */
     public Mat realizaThreshold() {
         Mat imagem = pn.retornaImagemInicial();
         Mat resultado = imagem.clone();
@@ -404,8 +412,15 @@ public class DetectorDefeitos extends JFrame {
         return resultado;
     }
 
-    //Abre um diálogo para a seleção de imagens
 
+    /**
+     * Opens the chosen arquive using the JFileChooser class. jfile is created
+     * as a public variable, and it will manage the current directory the user is on.
+     * It also remembers the last directory the user was on, for convenience.
+     *
+     * @return 1 if successfull, 0 if null file
+     * @throws IOException
+     */
     public int abreArquivo() throws IOException {
         boolean firstPass = false;
         if (jfile == null) {
@@ -427,10 +442,7 @@ public class DetectorDefeitos extends JFrame {
         }
         File a = jfile.getSelectedFile();
         System.out.println(a.getName());
-		/*//debug
-		System.out.println("Current file directory"
-				+ jfile.getCurrentDirectory().toString());
-		*/
+
         if (a != null) {
             pn.abreImagem(a);
             return 1;
@@ -440,8 +452,11 @@ public class DetectorDefeitos extends JFrame {
 
     }
 
-    /*Função que verifica se um texto é nulo. Caso for, retorna 255,
-     caso contrario, retorna o equivalente numérico do texto
+
+    /**
+     *
+     * @param k String to convert to double format
+     * @return returns the double value of k. If k is empty, returns 255 (black)
      */
     double converte(String k) {
         if (k.equals("")) {

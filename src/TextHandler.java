@@ -11,7 +11,6 @@ import java.util.Scanner;
 
 public class TextHandler {
 
-    float sigma, thresh, curv;
 
     public double[] readFile(String filestring) throws IOException {
 
@@ -64,6 +63,5 @@ public class TextHandler {
 
 
     }
-
 
 }
