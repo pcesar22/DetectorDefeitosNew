@@ -3,7 +3,6 @@
     <output-path>$PROJECT_DIR$/out/artifacts/DetectorDefeitosNew_jar</output-path>
     <root id="archive" name="DetectorDefeitosNew.jar">
       <element id="module-output" name="DetectorDefeitosNew" />
-      <element id="extracted-dir" path="C:/Program Files/opencv/build/java/opencv-249.jar" path-in-jar="/" />
     </root>
   </artifact>
 </component>

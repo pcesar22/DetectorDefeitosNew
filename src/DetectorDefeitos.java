@@ -335,7 +335,7 @@ public class DetectorDefeitos extends JFrame {
 
             @Override
             public void actionPerformed(ActionEvent e) {
-                new TestHistogram(pn.retornaImagemInicial());
+                new Histogram(pn.retornaImagemInicial());
             }
         });
 

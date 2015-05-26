@@ -7,14 +7,13 @@ import java.util.Map;
 import java.util.TreeMap;
 
 
-public class TestHistogram {
+public class Histogram {
 
     private int height, width;
-    private int FILTER_VALUE = 25;
+    private int FILTER_VALUE = 25;  // We don't care about pixels that have intensity levels below this.
 
-    private int otsuThreshold, globalThreshold;
 
-    public TestHistogram(Mat grayScaleImage) {
+    public Histogram(Mat grayScaleImage) {
 
         JFrame frame = new JFrame();
 
@@ -29,6 +28,13 @@ public class TestHistogram {
         frame.setVisible(true);
     }
 
+    /**
+     * Gets the data from a Mat image and converts it into a map, that captures
+     * the histogram in a key-value pair
+     *
+     * @param grayScaleImage
+     * @return
+     */
     public Map<Integer, Integer> getMapFromData(Mat grayScaleImage) {
 
         int[][] data = new int[width][height];
@@ -66,8 +72,54 @@ public class TestHistogram {
         return hist;
     }
 
-    // Function that returns a window to destroy very black or very white
-    // components
+
+    /**
+     * Average intensity of a histogram
+     *
+     * @param histogram list of 256 elements containing the stem value for each pixel intensity
+     * @return the average Intensity level
+     */
+    public double getAverageIntensity(int[] histogram) {
+        int length = histogram.length;
+        double averageIntensity;
+        int sum = 0, weightedSum = 0;
+        for (int i = 0; i < length; i++) {
+            sum += histogram[i];
+            weightedSum += i * histogram[i];
+        }
+        averageIntensity = (1.0 * weightedSum) / sum;
+
+        // debug
+        System.out.println("TEST getAverageIntensity = " + averageIntensity);
+
+        return averageIntensity;
+    }
+
+    public double getMeanGrayValue(int begin, int end, int[] histogram) {
+        // gets the mean gray value for a specified range, inclusive.
+
+        int sum = 0, weightedSum = 0;
+        double meanGrayValue;
+        for (int i = begin; i <= end; i++) {
+            sum += histogram[i];
+            weightedSum += i * histogram[i];
+        }
+
+        meanGrayValue = 1.0 * weightedSum / sum;
+        System.out.println("DEBUG meanGrayValue = " + meanGrayValue);
+        return meanGrayValue;
+
+    }
+
+    /************************
+     * WINDOWING ALGORITHMS *
+     ************************/
+
+    /**
+     * Function returns a rectangular window. Pixels are 0 below minValue, and 1 above it
+     * @param minValue
+     * @return list of 256 elements containing the multiplier for each pixel
+     */
 
     public int[] getWindowSharp(int minValue) {
         int[] window = new int[256];
@@ -81,6 +133,13 @@ public class TestHistogram {
         return window;
 
     }
+
+    /**
+     * Function returns a smooth window.
+     * @param minOneValue all values above this are 1
+     * @param halfValue this is where the smooth function is equal to 0.5
+     * @return list of 256 elements containing the multiplier for each pixel
+     */
 
     public double[] getWindowQuadratic(int minOneValue, double halfValue) {
         // minOneValue is the minimum value for which the window has gain 1
@@ -115,41 +174,10 @@ public class TestHistogram {
 
     }
 
-    public double getAverageIntensity(int[] histogram) {
-        int length = histogram.length;
-        double averageIntensity;
-        int sum = 0, weightedSum = 0;
-        for (int i = 0; i < length; i++) {
-            sum += histogram[i];
-            weightedSum += i * histogram[i];
-        }
-        averageIntensity = (1.0 * weightedSum) / sum;
 
-        // debug
-        System.out.println("TEST getAverageIntensity = " + averageIntensity);
-
-        return averageIntensity;
-    }
-
-    public double getMeanGrayValue(int begin, int end, int[] histogram) {
-        // gets the mean gray value for a specified range, inclusive.
-
-        int sum = 0, weightedSum = 0;
-        double meanGrayValue;
-        for (int i = begin; i <= end; i++) {
-            sum += histogram[i];
-            weightedSum += i * histogram[i];
-        }
-
-        meanGrayValue = 1.0 * weightedSum / sum;
-        System.out.println("DEBUG meanGrayValue = " + meanGrayValue);
-        return meanGrayValue;
-
-    }
-
-    /**************************
-     * THRESHOLDING ALGORITHMS*
-     **************************/
+    /***************************
+     * THRESHOLDING ALGORITHMS *
+     ***************************/
 
     /**
      * Uses the Global thresholding value, that simply gets the threshold that
@@ -273,8 +301,15 @@ public class TestHistogram {
             setPreferredSize(prefSize);
         }
 
+        /**
+         * Function that creates the rectangles, lines, etc. and displays the histogram
+         * In a panel.
+         * @param g graphics object to paint
+         */
         @Override
         protected void paintComponent(Graphics g) {
+
+            int otsuThreshold, globalThreshold;
 
             super.paintComponent(g);
             if (mapHistory != null) {
