@@ -18,6 +18,10 @@ import java.io.IOException;
  */
 
 @SuppressWarnings("serial")
+
+/**
+ * Main class that handles the user interface
+ */
 public class DetectorDefeitos extends JFrame {
 
     private JFileChooser jfile = null;
@@ -38,10 +42,11 @@ public class DetectorDefeitos extends JFrame {
             minCurvatureJTextField, minDistanceJTextField, thresholdJTextField;
 
     private int vMax = 255;
-    // Constante de multiplicação para ajuste de parametros
+
+    // Multiplication constant for curvature parameters (makes input easier)
     private int FACTOR = 10000;
 
-    // Parametros de tamanho
+    // Window dimension parameters
     private int WINDOW_WIDTH = 850;
     private int WINDOW_HEIGHT = 700;
     private int CONTROLE_HEIGHT = 100;
@@ -50,13 +55,13 @@ public class DetectorDefeitos extends JFrame {
 
     private int PAINEL_HEIGHT = WINDOW_HEIGHT - CONTROLE_HEIGHT;
 
-    // Parametros de processamento
+    // Processing parameters
     private double nSigma = 11, nCmin = 0.002 * FACTOR, nCmax = 0.05;
     private int nThresh = 100, nRange = 35;
 
     private String sThresh, sCmin, sCmax, sRange, sSigma;
 
-    private static int procCounter = 0;
+    private static int procCounter = 0; // Helps name the saved processed image file
 
 
     /**
@@ -452,7 +457,6 @@ public class DetectorDefeitos extends JFrame {
 
     }
 
-
     /**
      *
      * @param k String to convert to double format
@@ -465,6 +469,11 @@ public class DetectorDefeitos extends JFrame {
             return Double.valueOf(k);
         }
     }
+
+    /**
+     * Captures all the text fields and updates the parameters.
+     * Returns them back to the text field.
+     */
 
     private void atualizaString() {
         // Atualiza os valores mostrados nos text fields
@@ -483,7 +492,11 @@ public class DetectorDefeitos extends JFrame {
 
     }
 
-    //Exibição da interface gráfica
+    /**
+     * Main routine.
+     *
+     * @param args
+     */
     public static void main(String args[]) {
         DetectorDefeitos janela = new DetectorDefeitos();
         janela.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

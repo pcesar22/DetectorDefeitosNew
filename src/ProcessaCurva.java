@@ -13,7 +13,14 @@ public class ProcessaCurva {
 
     private int LIMIT = 10;
 
-    // Metodos para se obter uma curva a partir de uma componente conexa
+    /**
+     * Calculates the average value of each curve by simply summing their y values
+     * and dividing them by 2.
+     *
+     * @param input input image
+     * @param comp  connected component
+     * @return the ArrayList of the average values
+     */
 
     public ArrayList<Point> drawAverageCurve(Mat input, Componente comp) {
 
@@ -57,9 +64,13 @@ public class ProcessaCurva {
         }
     }
 
-	/*Retorna o kernel gaussiano bem como a sua primeira 
-	e segunda derivadas
-	*/
+    /**
+     * Retorna o kernel gaussiano bem como a sua primeira
+     e segunda derivadas
+     * @param sigma
+     * @param M
+     * @return
+     */
 
     //primeira linha da matriz - kernel gaussiano
     //segunda linha - derivada do kernel
@@ -91,10 +102,20 @@ public class ProcessaCurva {
 
         return ret;
     }
-	
-	/*Estima a derivada em um ponto específico em uma curva
-	 utilizando para isto o kernel gaussiano e suas derivadas
-	 */
+
+    /**
+     * Estima a derivada em um ponto específico em uma curva
+     utilizando para isto o kernel gaussiano e suas derivadas
+
+     * @param x
+     * @param n
+     * @param sigma
+     * @param g
+     * @param dg
+     * @param d2g
+     * @param isOpen
+     * @return
+     */
 
     public double[] getXDerivative(double[] x, int n, double sigma, double[] g, double[] dg, double[] d2g, boolean isOpen) {
         int L = (g.length - 1) / 2;
@@ -135,10 +156,19 @@ public class ProcessaCurva {
 
         return ret;
     }
-	
-	/*Estima a derivada em todos os pontos de uma curva
-	 utilizando para isto o kernel gaussiano e suas derivadas
-	 */
+
+    /**
+     * Estima a derivada em todos os pontos de uma curva
+     utilizando para isto o kernel gaussiano e suas derivadas
+
+     * @param x
+     * @param sigma
+     * @param g
+     * @param dg
+     * @param d2g
+     * @param isOpen
+     * @return
+     */
 
     public double[][] getXDerivativeCurve(double[] x, double sigma, double[] g, double[] dg, double[] d2g, boolean isOpen) {
         double[] gx = new double[x.length];

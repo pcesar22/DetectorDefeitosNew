@@ -147,6 +147,17 @@ public class TestHistogram {
 
     }
 
+    /**************************
+     * THRESHOLDING ALGORITHMS*
+     **************************/
+
+    /**
+     * Uses the Global thresholding value, that simply gets the threshold that
+     * divide the intensity levels evenly
+     *
+     * @param histogram list of 256 elements containing the stem values for every pixel
+     * @return the thresold
+     */
     public double getThresholdGlobalThresholding(int[] histogram) {
         int COUNTER_MAX = 1000; // Maximum number of iterations allowed
         int counter = 0;
@@ -166,10 +177,17 @@ public class TestHistogram {
 
         } while (thresholdNew - thresholdOld < 0.1 && counter < COUNTER_MAX);
 
-        System.out.println("DEBUG thresholdNew = " + thresholdNew);
+        //System.out.println("DEBUG thresholdNew = " + thresholdNew);
         return thresholdNew;
     }
 
+    /**
+     * Function that uses the OtsuMethod to generate a optimal threshold.
+     * Note that since this only work with two classes, there is an assumption that
+     * all the black pixels are excluded from the list
+     * @param histogram list of 256 elements containing the stem values for every pixel intensity
+     * @return the threshold
+     */
     public double getThresholdOtsuMethod(int[] histogram) {
 
         // Clear low values for now
@@ -218,8 +236,8 @@ public class TestHistogram {
             else
                 sigmaB = 0;
 
-            System.out.println("DEBUG iteration = " + t + " ... sigmaVal = "
-                    + sigmaB);
+//            System.out.println("DEBUG iteration = " + t + " ... sigmaVal = "
+//                    + sigmaB);
             q1 = q1 + 1.0 * histogram[t] / totalPixels;
             q2 = 1 - q1;
 
@@ -234,15 +252,16 @@ public class TestHistogram {
         return threshOfMax;
     }
 
+
+    /**
+     * Graph class used to plot the histogram
+     */
     protected class Graph extends JPanel {
 
-        /**
-         *
-         */
-        private static final long serialVersionUID = 1L;
+        private static final long serialVersionUID = 1L; // not sure
         protected static final int MIN_BAR_WIDTH = 4;
 
-        private Map<Integer, Integer> mapHistory;
+        private Map<Integer, Integer> mapHistory; // Map that contains the key-value pairs for the histogram stem plot
 
         public Graph(Map<Integer, Integer> mapHistory) {
             this.mapHistory = mapHistory;
