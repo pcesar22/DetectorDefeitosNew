@@ -47,13 +47,13 @@ public class DetectorDefeitos extends JFrame {
     private int FACTOR = 10000;
 
     // Window dimension parameters
-    private int WINDOW_WIDTH = 850;
-    private int WINDOW_HEIGHT = 700;
-    private int CONTROLE_HEIGHT = 100;
+    private int WINDOW_WIDTH = 640;
+    private int WINDOW_HEIGHT = 480;
+    private int CONTROL_HEIGHT = 100;
     private int PAINEL_WIDTH = 350;
     private int FOLGA = 10;
 
-    private int PAINEL_HEIGHT = WINDOW_HEIGHT - CONTROLE_HEIGHT;
+    private int PAINEL_HEIGHT = WINDOW_HEIGHT - CONTROL_HEIGHT;
 
     // Processing parameters
     private double nSigma = 11, nCmin = 0.002 * FACTOR, nCmax = 0.05;
@@ -70,6 +70,18 @@ public class DetectorDefeitos extends JFrame {
      * will be created.
      */
     DetectorDefeitos() {
+
+        // Button labels
+        String selectImageLabel = "Choose Image";
+        String importParametersLabel = "Import Parameters";
+        String removeAreaLabel = "Remove unwanted region";
+        String selectAreaLabel = "Select wanted region";
+        String testThresholdLabel = "Test threshold";
+        String processImageLabel = "Process image";
+        String histogramLabel = "Histogram";
+        String saveParametersLabel = "Save parameters";
+
+
 
         FILENAME = "Parametros/parametros";
         handler = new TextHandler();
@@ -91,7 +103,7 @@ public class DetectorDefeitos extends JFrame {
                 }
             }
         } catch (Exception e) {
-
+            e.printStackTrace();
         }
 
         //Filtro de imagens para a caixa de seleção
@@ -103,29 +115,28 @@ public class DetectorDefeitos extends JFrame {
 		 maior V possível.
 		 */
 
-        //Inicializa os rótulos das caixas de checagem
+        //Initialize the UI labels
         sigmaJLabel = new JLabel(" sigma: ");
         minCurvatureJLabel = new JLabel(" curvMin: ");
         maxCurvatureJLabel = new JLabel(" curvMax: ");
         minDistanceJLabel = new JLabel(" distInf: ");
         thresholdJLabel = new JLabel(" V_min: ");
 
-        //Inicializa caixas de texto onde inserimos os limites do Threshold
+        //Initialize the interactive text boxes
         sigmaJTextField = new JTextField();
         minCurvatureJTextField = new JTextField();
         maxCurvatureJTextField = new JTextField();
         minDistanceJTextField = new JTextField();
         thresholdJTextField = new JTextField();
 
-        atualizaString();
-        //Threshold que em geral funciona para as imagens em estudo
+        updateStrings();
+
 		
-		/*Painel que reune todos os componentes da interface gráfica
-		 relacionados com a definição de Thresholds
+		/*Panel that glues all components related to the UI (user interface), where we
+        want to have interactive text fields.
 		 */
         controlParametersJPanel = new JPanel();
-        controlParametersJPanel.setLayout(new GridLayout(3, 2)); // 7 linhas e 4
-        // colunas
+        controlParametersJPanel.setLayout(new GridLayout(3, 2));
 
         controlParametersJPanel.add(thresholdJLabel);
         controlParametersJPanel.add(thresholdJTextField);
@@ -133,6 +144,7 @@ public class DetectorDefeitos extends JFrame {
         controlParametersJPanel.add(sigmaJTextField);
         controlParametersJPanel.add(minCurvatureJLabel);
         controlParametersJPanel.add(minCurvatureJTextField);
+
         //controlParametersJPanel.add(maxCurvatureJLabel);
         //controlParametersJPanel.add(maxCurvatureJTextField);
         //controlParametersJPanel.add(minDistanceJLabel);
@@ -141,8 +153,8 @@ public class DetectorDefeitos extends JFrame {
         //Painel de imagem, que é a região onde a imagem é exibida
         pn = new PainelImagem();
 
-        //Botão de selecionar imagem
-        selectJButton = new JButton("Selecionar imagem");
+        //Select image button - opens up a prompt for the user to choose the image file to process
+        selectJButton = new JButton(selectImageLabel);
         selectJButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 try {
@@ -153,25 +165,28 @@ public class DetectorDefeitos extends JFrame {
                 }
             }
         });
-		/*Botão para a realização de cortes na imagem
-		(Corte de eliminação de detalhe)*/
-        removeAreaJButton = new JButton("Retira area indesejada");
+
+
+        // Button to remove unwanted area
+        removeAreaJButton = new JButton(removeAreaLabel);
         removeAreaJButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 if (removeAreaJButton.getText()
-                        .equals("Retira area indesejada")) {
-					/*informa ao painel que estamos em processo de 
-					desenho (primeiro true) e que é um desenho de
-					eliminação de detalhe (segundo true)*/
+                        .equals("Remove unwanted area")) {
+
+                    /**
+                     * First true - informs the panel that we are drawing
+                     * Second true - informs the panel that we are removing area
+                     */
 
                     boolean deuCerto = pn.podeDesenhar(true, true);
 
                     if (deuCerto) {
-                        removeAreaJButton.setText("Parar corte");
+                        removeAreaJButton.setText("Stop cut");
                         removeAreaJButton.setBackground(Color.RED);
                     }
                 } else {
-                    removeAreaJButton.setText("Retira area indesejada");
+                    removeAreaJButton.setText("Remove unwanted area");
                     removeAreaJButton.setBackground(null);
                     pn.atualizaImagemCorte();
 
@@ -182,21 +197,21 @@ public class DetectorDefeitos extends JFrame {
 		
 		/*Botão para a realização de cortes na imagem
 		(Corte de seleção de área de interesse)*/
-        cropAreaJButton = new JButton("Seleciona area desejada");
+        cropAreaJButton = new JButton(selectAreaLabel);
         cropAreaJButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                if (cropAreaJButton.getText().equals("Seleciona area desejada")) {
-					/*informa ao painel que estamos em processo de 
+                if (cropAreaJButton.getText().equals("Select area of interest")) {
+                    /*informa ao painel que estamos em processo de
 					desenho (primeiro true) e que é um desenho de
 					eliminação de detalhe (false)*/
 
                     boolean deuCerto = pn.podeDesenhar(true, false);
                     if (deuCerto) {
-                        cropAreaJButton.setText("Parar corte");
+                        cropAreaJButton.setText("Stop cut");
                         cropAreaJButton.setBackground(Color.BLUE);
                     }
                 } else {
-                    cropAreaJButton.setText("Seleciona area desejada");
+                    cropAreaJButton.setText("Select area of interest");
                     cropAreaJButton.setBackground(null);
                     pn.atualizaImagemProcessamento();
 
@@ -205,7 +220,7 @@ public class DetectorDefeitos extends JFrame {
             }
         });
 
-        processJButton = new JButton("Processar");
+        processJButton = new JButton(processImageLabel);
         processJButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
 				/*Opera o Threshold selecionado e realiza o processamento
@@ -248,7 +263,7 @@ public class DetectorDefeitos extends JFrame {
             }
         });
 
-        saveJButton = new JButton("Salvar");
+        saveJButton = new JButton(saveParametersLabel);
         saveJButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 try {
@@ -264,7 +279,7 @@ public class DetectorDefeitos extends JFrame {
             }
         });
 
-        loadJButton = new JButton("Importar Parâmetros");
+        loadJButton = new JButton(importParametersLabel);
         loadJButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 try {
@@ -277,14 +292,14 @@ public class DetectorDefeitos extends JFrame {
                     // TODO Auto-generated catch block
                     e1.printStackTrace();
                 }
-                atualizaString();
+                updateStrings();
                 validate();
                 repaint();
 
             }
         });
 
-        testThresholdJButton = new JButton("Testar Threshold");
+        testThresholdJButton = new JButton(testThresholdLabel);
         testThresholdJButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
 				/*Apenas abre uma janela com o resultado do Theshold
@@ -295,7 +310,8 @@ public class DetectorDefeitos extends JFrame {
                     MostraImagem k = new MostraImagem(pn.converteMatBufferedImage(resultado, true));
                     k.setVisible(true);
                 } else {
-                    JOptionPane.showMessageDialog(null, "Imagem nula! Selecione uma imagem", "Erro", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(null, "Null image! Select an Image",
+                            "Error", JOptionPane.ERROR_MESSAGE);
                 }
 
             }
@@ -309,7 +325,7 @@ public class DetectorDefeitos extends JFrame {
                 nRange = 40;
                 nCmin = 0.001;
                 nCmax = 0.04;
-                atualizaString();
+                updateStrings();
                 validate();
                 repaint();
             }
@@ -323,14 +339,14 @@ public class DetectorDefeitos extends JFrame {
                 nRange = 40;
                 nCmin = 0.001;
                 nCmax = 0.04;
-                atualizaString();
+                updateStrings();
                 validate();
                 repaint();
             }
         });
 
         // Botao para gerar o histograma
-        histJButton = new JButton("Histograma");
+        histJButton = new JButton(histogramLabel);
         histJButton.addActionListener(new ActionListener() {
 
             @Override
@@ -344,7 +360,7 @@ public class DetectorDefeitos extends JFrame {
         spacerJLabel = new JLabel("============================================");
         numberOfDefectsJLabel = new JLabel("  Selecione a parte de interesse: ");
 
-        //Painel que reune todos os botões
+        //Button panel that glues all buttons
         buttonJPanel = new JPanel();
         buttonJPanel.setLayout(new GridLayout(12, 1));
 
@@ -375,13 +391,13 @@ public class DetectorDefeitos extends JFrame {
         mainJPanel.setBounds(WINDOW_WIDTH, 0, PAINEL_WIDTH - FOLGA,
                 PAINEL_HEIGHT);
         controlParametersJPanel.setBounds(WINDOW_WIDTH, WINDOW_HEIGHT
-                        - CONTROLE_HEIGHT,
-                PAINEL_WIDTH - FOLGA, CONTROLE_HEIGHT);
+                        - CONTROL_HEIGHT,
+                PAINEL_WIDTH - FOLGA, CONTROL_HEIGHT);
 
         controlParametersJPanel.setBorder(BorderFactory
                 .createLineBorder(Color.black));
 
-        //adiciona todos os paineis à janela principal
+        //adds all the panels to the main window
         getContentPane().add(pn);
         getContentPane().add(mainJPanel);
         getContentPane().add(controlParametersJPanel);
@@ -475,7 +491,7 @@ public class DetectorDefeitos extends JFrame {
      * Returns them back to the text field.
      */
 
-    private void atualizaString() {
+    private void updateStrings() {
         // Atualiza os valores mostrados nos text fields
 
         sThresh = String.valueOf(nThresh);

@@ -16,7 +16,8 @@ public class TextHandler {
 
         //STRUCTURE FOR THE PARAMETERS IS:
         //<sigma>,<thresh>,<mincurv>
-
+//wj
+        // another commetn
         double csvValues[] = new double[3]; //CSV = comma-separated-values
         ArrayList<String> stringlist = new ArrayList<String>();
         Scanner s = null;
