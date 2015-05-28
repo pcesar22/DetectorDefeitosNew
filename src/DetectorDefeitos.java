@@ -81,6 +81,23 @@ public class DetectorDefeitos extends JFrame {
         String histogramLabel = "Histogram";
         String saveParametersLabel = "Save parameters";
 
+        // Tooltip labels ... html tags are just to use the <br> that breaks the line
+        String selectImageToolTip = "<html>Select image to be processed";
+        String importParametersTooltip = "<html>Import parameters from a saved text file with the same name as the image, <br> " +
+                " but with a .txt extension </html>";
+        String removeAreaToolTip = "<html>Remove unwanted area. Select a point and form a closed contour, <br>  " +
+                "making sure to end at the same point </html>";
+        String selectAreaToolTip = "<html>Select desired area. Select a point and form a closed contour, <br> " +
+                "making sure to end at the same point </html>";
+        String testThresholdToolTip = "<html>Test the chosen threshold. We want the connected components <br> >" +
+                "to be as significant as possible </html>";
+        String processImageToolTip = "<html>Apply the image processing algorithm and save the image in the <br> " +
+                "same folder </html>";
+        String histogramToolTip = "<html>Makes a histogram plot of the pixels in the image. <br> " +
+                "Also displays the automated threshold using various algorithms </html>";
+        String saveParametersToolTip = "<html>Save current parameters to a text file with the same name as <br> " +
+                "the image, with a .txt extension </html>";
+
 
 
         FILENAME = "Parametros/parametros";
@@ -159,12 +176,16 @@ public class DetectorDefeitos extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 try {
                     //abre um diálogo para a seleção da imagem
-                    abreArquivo();
+                    openFile();
                 } catch (IOException ex) {
                     JOptionPane.showMessageDialog(null, "Erro ao abrir o arquivo", "Erro", JOptionPane.ERROR_MESSAGE);
                 }
             }
         });
+        selectJButton.setBorder(BorderFactory.createLineBorder(Color.orange.brighter(), 2));
+        selectJButton.setBackground(Color.orange.darker().darker());
+        selectJButton.setToolTipText(processImageToolTip);
+
 
 
         // Button to remove unwanted area
@@ -263,6 +284,11 @@ public class DetectorDefeitos extends JFrame {
             }
         });
 
+        //FANCY!
+        processJButton.setBorder(BorderFactory.createLineBorder(Color.BLUE.darker(), 2));
+        processJButton.setBackground(Color.cyan.darker().darker());
+
+
         saveJButton = new JButton(saveParametersLabel);
         saveJButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -278,6 +304,9 @@ public class DetectorDefeitos extends JFrame {
                 }
             }
         });
+        saveJButton.setBorderPainted(true);
+        saveJButton.setBackground(Color.GRAY);
+
 
         loadJButton = new JButton(importParametersLabel);
         loadJButton.addActionListener(new ActionListener() {
@@ -298,6 +327,8 @@ public class DetectorDefeitos extends JFrame {
 
             }
         });
+        loadJButton.setBorderPainted(true);
+        loadJButton.setBackground(Color.GRAY);
 
         testThresholdJButton = new JButton(testThresholdLabel);
         testThresholdJButton.addActionListener(new ActionListener() {
@@ -356,22 +387,38 @@ public class DetectorDefeitos extends JFrame {
         });
 
 
+        // Set the tooltips for the buttons
+
+        cropAreaJButton.setToolTipText(selectAreaToolTip);
+        processJButton.setToolTipText(processImageToolTip);
+        selectJButton.setToolTipText(selectImageToolTip);
+        removeAreaJButton.setToolTipText(removeAreaToolTip);
+        saveJButton.setToolTipText(saveParametersToolTip);
+        loadJButton.setToolTipText(importParametersTooltip);
+        histJButton.setToolTipText(histogramToolTip);
+        testThresholdJButton.setToolTipText(testThresholdToolTip);
+
         //Mostra o número de defeitos encontrados (Não foi utilizado ainda)
         spacerJLabel = new JLabel("============================================");
-        numberOfDefectsJLabel = new JLabel("  Selecione a parte de interesse: ");
+        numberOfDefectsJLabel = new JLabel("  Select the part of interest ");
 
         //Button panel that glues all buttons
         buttonJPanel = new JPanel();
         buttonJPanel.setLayout(new GridLayout(12, 1));
 
+        // Buttons should be in order of how they should be displayed
         buttonJPanel.add(selectJButton);
-        buttonJPanel.add(loadJButton);
+
         buttonJPanel.add(removeAreaJButton);
         buttonJPanel.add(cropAreaJButton);
+
         buttonJPanel.add(testThresholdJButton);
-        buttonJPanel.add(processJButton);
         buttonJPanel.add(histJButton);
+
         buttonJPanel.add(saveJButton);
+        buttonJPanel.add(loadJButton);
+
+        buttonJPanel.add(processJButton);
 
         //buttonJPanel.add(spacerJLabel);
 
@@ -442,7 +489,7 @@ public class DetectorDefeitos extends JFrame {
      * @return 1 if successfull, 0 if null file
      * @throws IOException
      */
-    public int abreArquivo() throws IOException {
+    public int openFile() throws IOException {
         boolean firstPass = false;
         if (jfile == null) {
             firstPass = true;
