@@ -281,6 +281,39 @@ public class Histogram {
     }
 
 
+    public double getThresholdZeroDerivative(int[] histogram) {
+
+        int histSize = histogram.length;
+        int threshold = -1;
+
+        // Find maxsize
+        int maxVal = 0;
+        for (int i = 1; i < histSize; i++) {
+            if (histogram[i] > histogram[maxVal]) {
+                maxVal = i;
+            }
+        }
+
+        // Create Gaussian filter
+        double sigma = 5.0;
+        double Ng = 6 * sigma + 1; // 3*sigma for each side
+        double[] gfilter = new double[(int) (Ng + 0.5d)];
+        for (int i = 0; i < Ng; i++) {
+            gfilter[i] = Math.exp(-(i - 3 * sigma) * (i - 3 * sigma) / (2 * sigma * sigma))
+                    / Math.sqrt(2 * Math.PI * sigma * sigma);
+        }
+        // Convolve with histogram
+        //double filteredSignal[] = convolve(histogram, gfilter);
+
+
+        // Find zero derivative after the first maxima
+
+
+        return threshold;
+
+    }
+
+
     /**
      * Graph class used to plot the histogram
      */
@@ -416,5 +449,27 @@ public class Histogram {
 
             }
         }
+    }
+
+    /**
+     * @param histogram
+     * @param filter
+     * @return
+     */
+    double[] convolve(double histogram[], double filter[]) {
+
+        int histSize = histogram.length;
+        int filterSize = filter.length;
+        int answerlength = histSize + filterSize - 1;
+
+        double answer[] = new double[answerlength];
+        answer[0] = 0;
+
+        // NEED TO ZERO-PAD THE HIST AND FILTER VECTORS TO OCCUPY answerlength SIZE
+        for (int i = 0; i < answerlength; i++) {
+            answer[i] = answer[i] + histogram[i] * filter[filterSize - 1];
+        }
+
+        return answer;
     }
 }

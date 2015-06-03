@@ -57,7 +57,7 @@ public class DetectorDefeitos extends JFrame {
 
     // Processing parameters
     private double nSigma = 11, nCmin = 0.002 * FACTOR, nCmax = 0.05;
-    private int nThresh = 100, nRange = 35;
+    private int nThresh = 100, nDistInf = 35;
 
     private String sThresh, sCmin, sCmax, sRange, sSigma;
 
@@ -107,7 +107,7 @@ public class DetectorDefeitos extends JFrame {
         setSize(WINDOW_WIDTH + PAINEL_WIDTH + FOLGA, WINDOW_HEIGHT
                 + 5 * FOLGA);
         setResizable(true);
-        setTitle("Reconhecedor de defeitos v1.1");
+        setTitle("Reconhecedor de defeitos v2.0");
         setLocationRelativeTo(null);
 
         //Apenas modifica o Look And Feel da Janela se possível
@@ -164,8 +164,8 @@ public class DetectorDefeitos extends JFrame {
 
         //controlParametersJPanel.add(maxCurvatureJLabel);
         //controlParametersJPanel.add(maxCurvatureJTextField);
-        //controlParametersJPanel.add(minDistanceJLabel);
-        //controlParametersJPanel.add(minDistanceJTextField);
+        controlParametersJPanel.add(minDistanceJLabel);
+        controlParametersJPanel.add(minDistanceJTextField);
 
         //Painel de imagem, que é a região onde a imagem é exibida
         pn = new PainelImagem();
@@ -248,11 +248,11 @@ public class DetectorDefeitos extends JFrame {
 				 da imagem
 				 */
 
-                double curvMin = converte(minCurvatureJTextField.getText())
+                double curvMin = convertStringToDouble(minCurvatureJTextField.getText())
                         / FACTOR;
-                double curvMax = converte(maxCurvatureJTextField.getText());
-                double sigma = converte(sigmaJTextField.getText());
-                double distInf = converte(minDistanceJTextField.getText());
+                double curvMax = convertStringToDouble(maxCurvatureJTextField.getText());
+                double sigma = convertStringToDouble(sigmaJTextField.getText());
+                double distInf = convertStringToDouble(minDistanceJTextField.getText());
 
                 Mat resultado = realizaThreshold();
                 BufferedImage output = pn.executeProcessing(resultado, curvMin,
@@ -265,17 +265,49 @@ public class DetectorDefeitos extends JFrame {
                     System.out.println(jfile.getSelectedFile().getName());
 
                     // Make file name
-                    String fileName = jfile.getCurrentDirectory().toString()
-                            + "\\"
-                            + jfile.getSelectedFile().getName() + "_PROC_"
-                            + procCounter + ".jpg";
+                    String path = jfile.getCurrentDirectory().toString();
+                    String fileName = removeExtension(jfile.getSelectedFile().getName());
                     //debug
-                    System.out.println(fileName);
-                    File outputfile = new File(fileName);
+                    System.out.println("removed File name string: " + fileName);
+
+                    String imageFileName = path
+                            + "\\"
+                            + fileName
+                            + "_proc"
+                            //+ procCounter
+                            + ".jpg";
+                    //debug
+                    System.out.println(imageFileName);
+
+                    String textFileName = path
+                            + "\\"
+                            + fileName
+                            + "_proc"
+                            //+ procCounter
+                            + ".txt";
+
+                    System.out.println(textFileName);
+
+                    File outputImageFile = new File(imageFileName);
+                    //File outputTextFile = new File(textFileName); // not sure if used
                     procCounter++;
 
-                    // Write the output file
-                    ImageIO.write(output, "png", outputfile);
+                    // Write the output image file
+                    ImageIO.write(output, "png", outputImageFile);
+
+                    // Write the output text file
+                    try {
+                        handler.writeFileFancy(
+                                new double[]{
+                                        convertStringToDouble(sigmaJTextField.getText()),
+                                        convertStringToDouble(thresholdJTextField.getText()),
+                                        convertStringToDouble(minCurvatureJTextField.getText()),
+                                        convertStringToDouble(minDistanceJTextField.getText())},
+                                textFileName);
+                    } catch (IOException e1) {
+                        // TODO Auto-generated catch block
+                        e1.printStackTrace();
+                    }
 
                 } catch (IOException e1) {
                     // TODO Auto-generated catch block
@@ -292,12 +324,22 @@ public class DetectorDefeitos extends JFrame {
         saveJButton = new JButton(saveParametersLabel);
         saveJButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
+                String path = jfile.getCurrentDirectory().toString();
+                String fileName = removeExtension(jfile.getSelectedFile().getName());
+                String textFileName = path
+                        + "\\"
+                        + fileName
+                        + "_proc_csv"
+                        //+ procCounter
+                        + ".txt";
+                FILENAME = textFileName;
                 try {
                     handler.writeFile(
-                            new double[]{converte(sigmaJTextField.getText()),
-                                    converte(thresholdJTextField.getText()),
-                                    converte(minCurvatureJTextField.getText())},
-                            FILENAME);
+                            new double[]{convertStringToDouble(sigmaJTextField.getText()),
+                                    convertStringToDouble(thresholdJTextField.getText()),
+                                    convertStringToDouble(minCurvatureJTextField.getText()),
+                                    convertStringToDouble(minDistanceJTextField.getText())},
+                            textFileName);
                 } catch (IOException e1) {
                     // TODO Auto-generated catch block
                     e1.printStackTrace();
@@ -316,6 +358,7 @@ public class DetectorDefeitos extends JFrame {
                     nSigma = storedValues[0];
                     nThresh = (int) storedValues[1];
                     nCmin = storedValues[2];
+                    nDistInf = (int) storedValues[3];
 
                 } catch (IOException e1) {
                     // TODO Auto-generated catch block
@@ -353,7 +396,7 @@ public class DetectorDefeitos extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 nSigma = 14;
                 nThresh = 140;
-                nRange = 40;
+                nDistInf = 40;
                 nCmin = 0.001;
                 nCmax = 0.04;
                 updateStrings();
@@ -367,7 +410,7 @@ public class DetectorDefeitos extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 nSigma = 12;
                 nThresh = 180;
-                nRange = 40;
+                nDistInf = 40;
                 nCmin = 0.001;
                 nCmax = 0.04;
                 updateStrings();
@@ -461,7 +504,7 @@ public class DetectorDefeitos extends JFrame {
         Mat imagemHSV = pn.retornaImagemHSV();
         //Mat imagem_gray = pn.retornaImagemGray();
 
-        double v_min = converte(thresholdJTextField.getText());
+        double v_min = convertStringToDouble(thresholdJTextField.getText());
         int rows = imagem.rows();
         int cols = imagem.cols();
 
@@ -525,7 +568,7 @@ public class DetectorDefeitos extends JFrame {
      * @param k String to convert to double format
      * @return returns the double value of k. If k is empty, returns 255 (black)
      */
-    double converte(String k) {
+    double convertStringToDouble(String k) {
         if (k.equals("")) {
             return 255;
         } else {
@@ -544,7 +587,7 @@ public class DetectorDefeitos extends JFrame {
         sThresh = String.valueOf(nThresh);
         sCmin = String.valueOf(nCmin);
         sCmax = String.valueOf(nCmax);
-        sRange = String.valueOf(nRange);
+        sRange = String.valueOf(nDistInf);
         sSigma = String.valueOf(nSigma);
 
         sigmaJTextField.setText(sSigma);
@@ -553,6 +596,17 @@ public class DetectorDefeitos extends JFrame {
         minDistanceJTextField.setText(sRange);
         thresholdJTextField.setText(sThresh);
 
+    }
+
+    /**
+     * @param input
+     * @return
+     */
+    private String removeExtension(String input) {
+
+        if (input.lastIndexOf('.') != -1) return input.substring(0, input.lastIndexOf('.'));
+
+        else return input;
     }
 
     /**
@@ -565,6 +619,7 @@ public class DetectorDefeitos extends JFrame {
         janela.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         janela.setVisible(true);
     }
+
 }
 
 
