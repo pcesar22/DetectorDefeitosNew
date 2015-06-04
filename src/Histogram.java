@@ -3,6 +3,7 @@ import org.opencv.core.Mat;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.geom.Rectangle2D;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -11,7 +12,7 @@ public class Histogram {
 
     private int height, width;
     private int FILTER_VALUE = 25;  // We don't care about pixels that have intensity levels below this.
-
+    private int LOWEST_TO_PRINT = 15; // We don't print values below this level
 
     public Histogram(Mat grayScaleImage) {
 
@@ -281,17 +282,28 @@ public class Histogram {
     }
 
 
-    public double getThresholdZeroDerivative(int[] histogram) {
+    /**
+     * Applies a gaussian filter to get rid of peaks. The threshold should ideally
+     * be between the two "maxima", in the point of zero derivative.
+     * This method assumes that this occurs. Errors might result in the current implementation
+     * if there is not a "valley" right after a maxima.
+     *
+     * @param histogram
+     * @return The threshold using the zeroDerivative method
+     */
+    public int getThresholdZeroDerivative(int[] histogram2) {
 
-        int histSize = histogram.length;
+        int histSize = histogram2.length;
         int threshold = -1;
-
-        // Find maxsize
-        int maxVal = 0;
-        for (int i = 1; i < histSize; i++) {
-            if (histogram[i] > histogram[maxVal]) {
-                maxVal = i;
-            }
+        // Normalize vector
+        int totalPixels = 0;
+        for (int i = 0; i < 256; i++) {
+            totalPixels += histogram2[i];
+        }
+        // Ok the 2 is just so I can do this ;D
+        double histogram[] = new double[256];
+        for (int i = 0; i < 256; i++) {
+            histogram[i] = 1.0f * histogram2[i] / totalPixels;
         }
 
         // Create Gaussian filter
@@ -302,12 +314,37 @@ public class Histogram {
             gfilter[i] = Math.exp(-(i - 3 * sigma) * (i - 3 * sigma) / (2 * sigma * sigma))
                     / Math.sqrt(2 * Math.PI * sigma * sigma);
         }
-        // Convolve with histogram
-        //double filteredSignal[] = convolve(histogram, gfilter);
 
+        // DEBUG
+        System.out.println("DEBUG: the gaussian filter is : " + Arrays.toString(gfilter));
+        System.out.println("DEBUG: the original signal is : "
+                + Arrays.toString(histogram));
+        // Convolve with histogram
+        double filteredSignal[] = convolve(histogram, gfilter);
+
+        //DEBUG
+        checkConvolve();
+        System.out.println("DEBUG: the convolved signal is : "
+                + Arrays.toString(filteredSignal));
+
+        // Find maxsize
+        int maxVal = 0;
+        for (int i = 0; i < histSize; i++) {
+            if (filteredSignal[i] > filteredSignal[maxVal]) {
+                maxVal = i;
+            }
+        }
+        System.out.println("DEBUG: maximum value is : " + maxVal);
 
         // Find zero derivative after the first maxima
-
+        for (int i = maxVal; i < 252; i++) {
+            if ((filteredSignal[i + 1] > filteredSignal[i]) &&
+                    (filteredSignal[i + 2] > filteredSignal[i + 1]) &&
+                    (filteredSignal[i + 3] > filteredSignal[i + 2])) {
+                threshold = i;
+                break;
+            }
+        }
 
         return threshold;
 
@@ -342,7 +379,7 @@ public class Histogram {
         @Override
         protected void paintComponent(Graphics g) {
 
-            int otsuThreshold, globalThreshold;
+            int otsuThreshold, globalThreshold, zeroThreshold;
 
             super.paintComponent(g);
             if (mapHistory != null) {
@@ -351,11 +388,13 @@ public class Histogram {
 
                 otsuThreshold = (int) getThresholdOtsuMethod(histogram);
                 globalThreshold = (int) getThresholdGlobalThresholding(histogram);
+                zeroThreshold = getThresholdZeroDerivative(histogram);
 
 
                 System.out.println("DEBUG otsuThreshold = " + otsuThreshold);
                 System.out
                         .println("DEBUG globalThreshold = " + globalThreshold);
+                System.out.println("DEBUG zeroThreshold = " + zeroThreshold);
 
                 // Dimension bookkeeping
                 int xOffset = 5;
@@ -377,9 +416,10 @@ public class Histogram {
                 // + mapHistory.size() + "; barWidth = " + barWidth);
                 int maxValue = 0;
 
+                // Find maxValue of the histogram to aid in printing
                 for (Integer key : mapHistory.keySet()) {
                     int value = mapHistory.get(key);
-                    maxValue = Math.max(maxValue, value);
+                    if (key >= LOWEST_TO_PRINT) maxValue = Math.max(maxValue, value);
                 }
 
                 int xPos = xOffset;
@@ -395,8 +435,13 @@ public class Histogram {
                     } else {
                         value = 0;
                     }
-                    int barHeight = Math
-                            .round(((float) value / (float) maxValue) * height);
+
+                    int barHeight;
+                    if (key < LOWEST_TO_PRINT) barHeight = 0;
+                    else {
+                        barHeight = Math
+                                .round(((float) value / (float) maxValue) * height);
+                    }
                     g2d.setColor(new Color(key, key, key));
 
                     int yPos = height + yOffset - barHeight;
@@ -404,11 +449,16 @@ public class Histogram {
                     Rectangle2D bar = new Rectangle2D.Float(xPos, yPos,
                             barWidth, barHeight);
 
+                    // LOGIC TO PRINT OUT THE COLORED RECTANGLES!!!
+                    // IMPORTANT
                     if (transformedThreshold == (xPos - xOffset) / barWidth) {
                         g2d.setColor(Color.RED);
                         g2d.fill(bar);
                     } else if (otsuThreshold == (xPos - xOffset) / barWidth) {
                         g2d.setColor(Color.GREEN);
+                        g2d.fill(bar);
+                    } else if (zeroThreshold == (xPos - xOffset) / barWidth) {
+                        g2d.setColor(Color.BLUE);
                         g2d.fill(bar);
                     } else
                         g2d.fill(bar);
@@ -434,15 +484,20 @@ public class Histogram {
 
                 }
 
+                // TEXT TO SHOW THE LEGEND OF THE COLORS USED
                 String threshValues1 = "Threshold from Otsu (green): "
                         + otsuThreshold;
                 String threshValues2 = "Threshold from Global (red): "
                         + globalThreshold;
+                String threshValues3 = "Threshold from Zero (blue): "
+                        + zeroThreshold;
+
                 String highlightWindow = "In cyan is the window to clear background";
 
                 g2d.setColor(Color.BLACK);
                 g2d.drawString(threshValues1, width - 250, 20);
                 g2d.drawString(threshValues2, width - 250, 35);
+                g2d.drawString(threshValues3, width - 250, 50);
                 g2d.drawString(highlightWindow, width - 250, 75);
 
                 g2d.dispose();
@@ -451,25 +506,58 @@ public class Histogram {
         }
     }
 
-    /**
-     * @param histogram
-     * @param filter
-     * @return
+    /** Calculates the convolution between two vectors. Assumes filterSize < histogramSize
+     * @param histogram list of 256 elements containing the stem values for every pixel
+     * @param filter filter containing the weights for convolution
+     * @return the new histogram values after filtering has been applied
      */
     double[] convolve(double histogram[], double filter[]) {
 
+        // assumes filterSize < histogramSize
         int histSize = histogram.length;
         int filterSize = filter.length;
         int answerlength = histSize + filterSize - 1;
 
         double answer[] = new double[answerlength];
-        answer[0] = 0;
 
-        // NEED TO ZERO-PAD THE HIST AND FILTER VECTORS TO OCCUPY answerlength SIZE
+        // zero padded for convolution
+        double paddedHistogram[] = new double[answerlength];
+
+        for (int i = 0; i < histSize; i++) {
+            paddedHistogram[i] = histogram[i];
+        }
+
+        // Apply convolution
         for (int i = 0; i < answerlength; i++) {
-            answer[i] = answer[i] + histogram[i] * filter[filterSize - 1];
+            answer[i] = 0;
+            if (i < filterSize) {
+                for (int j = 0; j <= i; j++) {
+                    answer[i] += paddedHistogram[i - j] * filter[j];
+                }
+            } else {
+                for (int j = 0; j <= filterSize - 1; j++) {
+                    answer[i] += paddedHistogram[i - j] * filter[j];
+                }
+            }
         }
 
         return answer;
+    }
+
+    /**
+     * Simple function to debug the convolution function
+     * Creates two vectors and prints out their result
+     */
+    private void checkConvolve() {
+        double hist[] = {1, 2, 3, 5, 4};
+        double filter[] = {1.1, 1.2};
+
+        System.out.println("Histogram dummy is: " + Arrays.toString(hist));
+        System.out.println("Filter dummy is: " + Arrays.toString(filter));
+
+        double result[] = convolve(hist, filter);
+        System.out.println("Convolution is : " + Arrays.toString(result));
+
+
     }
 }

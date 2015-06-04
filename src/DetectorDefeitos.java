@@ -153,7 +153,7 @@ public class DetectorDefeitos extends JFrame {
         want to have interactive text fields.
 		 */
         controlParametersJPanel = new JPanel();
-        controlParametersJPanel.setLayout(new GridLayout(3, 2));
+        controlParametersJPanel.setLayout(new GridLayout(4, 2));
 
         controlParametersJPanel.add(thresholdJLabel);
         controlParametersJPanel.add(thresholdJTextField);
