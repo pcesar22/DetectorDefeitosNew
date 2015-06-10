@@ -285,10 +285,15 @@ public class Histogram {
     /**
      * Applies a gaussian filter to get rid of peaks. The threshold should ideally
      * be between the two "maxima", in the point of zero derivative.
+     *
      * This method assumes that this occurs. Errors might result in the current implementation
      * if there is not a "valley" right after a maxima.
      *
-     * @param histogram
+     * In the case that it doesn't occur, then the algorithm searches for the case
+     * where the derivative starts to increase right after it starts to decrease (
+     * pretty much the point with second derivative = 0)
+     *
+     * @param histogram2
      * @return The threshold using the zeroDerivative method
      */
     public int getThresholdZeroDerivative(int[] histogram2) {
@@ -346,10 +351,50 @@ public class Histogram {
             }
         }
 
-        return threshold;
+        if (threshold < 0) // this means that there was no "maximum" point
+        {
+            // try to find points with small slope
+            double slope, nextSlope, nextNextSlope; // one more for ensurance
+            boolean proceedToTest = false;
+            for (int i = maxVal; i < 252; i++) {
+                slope = Math.abs(filteredSignal[i + 1] - filteredSignal[i]);
+                nextSlope = Math.abs(filteredSignal[i + 2] - filteredSignal[i + 1]);
+                nextNextSlope = Math.abs(filteredSignal[i + 3] - filteredSignal[i + 2]);
+
+                if ((!proceedToTest) && (nextNextSlope < nextSlope) && (nextSlope < slope)) {
+                    proceedToTest = true; // This means that the slope is decreasing, and we want
+                    // to capture when it starts increasing again
+                }
+
+
+                if (proceedToTest) {
+
+                    if (nextNextSlope > nextSlope && nextSlope > slope) {
+                        threshold = i;
+                        break;
+                    }
+                }
+            }
+        }
+
+        return threshold - 15;
 
     }
 
+    /**
+     * Since the parameter being used by the
+     *
+     * @param histogram
+     * @return The threshold using the integral method
+     */
+    public int getThresholdIntegralMethod(int[] histogram) {
+        int threshold = -1;
+
+
+        return threshold;
+
+
+    }
 
     /**
      * Graph class used to plot the histogram
